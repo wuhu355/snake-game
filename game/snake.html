@@ -109,8 +109,18 @@
   .overlay.over .overlay-subtitle { font-size:21px; color:rgba(255,255,255,.8); letter-spacing:3px; margin-bottom:12px; }
   .overlay.over .snake-deco { display:none; }
   .overlay.over .difficulty-group { display:none; }
+  .overlay.over .return-btn { display:inline-block; }
 
   .hint { color:rgba(255,255,255,.35); font-size:13px; letter-spacing:1px; }
+
+  /* 返回初始界面按钮 */
+  .return-btn {
+    display:none; margin-top:18px; padding:10px 32px; border-radius:22px;
+    border:1.5px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08);
+    color:rgba(255,255,255,.7); font-size:15px; font-weight:600; letter-spacing:3px;
+    cursor:pointer; transition: all .25s; font-family: inherit;
+  }
+  .return-btn:hover { border-color:rgba(255,255,255,.5); color:#fff; background:rgba(255,255,255,.15); box-shadow:0 0 16px rgba(255,255,255,.1); }
 </style>
 </head>
 <body>
@@ -144,6 +154,9 @@
       </div>
 
       <div class="overlay-prompt" id="op">按空格键开始游戏</div>
+
+      <!-- 返回按钮（仅结束界面显示） -->
+      <button class="return-btn" id="returnBtn">返回初始界面</button>
     </div>
   </div>
 
@@ -162,6 +175,7 @@
   var ot  = document.getElementById('ot');
   var os  = document.getElementById('os');
   var op  = document.getElementById('op');
+  var rtn = document.getElementById('returnBtn');
   var btns= document.querySelectorAll('.diff-btn');
 
   /* ====== 常量 ====== */
@@ -373,6 +387,13 @@
 
   ov.addEventListener('click',function(){
     if(state==='idle'||state==='over') startGame();
+  });
+
+  // 返回初始界面按钮
+  rtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    state = 'idle';
+    showOverlay('start');
   });
 
   var tx=0,ty=0;
