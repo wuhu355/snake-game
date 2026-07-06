@@ -111,6 +111,14 @@
   .overlay.over .difficulty-group { display:none; }
   .overlay.over .return-btn { display:inline-block; }
 
+  /* 暂停状态 */
+  .overlay.pause .overlay-title { color:#f1c40f; font-size:44px;
+    text-shadow:0 0 20px rgba(241,196,15,.6), 0 0 60px rgba(241,196,15,.3);
+  }
+  .overlay.pause .overlay-subtitle { font-size:19px; color:rgba(255,255,255,.7); letter-spacing:3px; margin-bottom:12px; }
+  .overlay.pause .snake-deco { display:none; }
+  .overlay.pause .difficulty-group { display:none; }
+
   .hint { color:rgba(255,255,255,.35); font-size:13px; letter-spacing:1px; }
 
   /* 返回初始界面按钮 */
@@ -160,7 +168,7 @@
     </div>
   </div>
 
-  <div class="hint">Arrow / WASD 方向 · 1-4 切换难度 · 空格开始</div>
+  <div class="hint">Arrow / WASD 方向 · 1-4 切换难度 · 空格开始 · Esc/P 暂停</div>
 </div>
 
 <script>
@@ -220,12 +228,17 @@
 
   /* ====== 覆盖层控制 ====== */
   function showOverlay(type){
-    ov.classList.remove('hidden','over');
+    ov.classList.remove('hidden','over','pause');
     if(type==='over'){
       ov.classList.add('over');
       ot.textContent = '游戏结束';
       os.textContent = '难度：'+DIFFS[difficulty].name+'  |  得分：'+score;
       op.textContent = '按空格键重新开始';
+    } else if(type==='pause'){
+      ov.classList.add('pause');
+      ot.textContent = '暂停';
+      os.textContent = '难度：'+DIFFS[difficulty].name+'  |  得分：'+score;
+      op.textContent = '按 Esc 或 P 继续游戏';
     } else {
       ot.textContent = '贪吃蛇';
       os.textContent = 'SNAKE GAME';
@@ -357,9 +370,32 @@
 
   function startLoop(){ lastTime=0; rafId=requestAnimationFrame(loop); }
 
+  function resumeLoop(){
+    // 设置 lastTime 使得恢复后首个间隔不会立即移动
+    lastTime = performance.now();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* ====== 暂停 ====== */
+  function togglePause(){
+    if(state==='playing'){
+      state = 'paused';
+      if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+      showOverlay('pause');
+    } else if(state==='paused'){
+      state = 'playing';
+      hideOverlay();
+      resumeLoop();
+    }
+  }
+
   /* ====== 输入 ====== */
   function startGame(){
     init(); state='playing'; hideOverlay(); startLoop();
+  }
+
+  function resumeGame(){
+    state='playing'; hideOverlay(); resumeLoop();
   }
 
   document.addEventListener('keydown',function(e){
@@ -369,9 +405,15 @@
       if(keys[e.key]){ setDifficulty(keys[e.key]); return; }
     }
 
+    // 暂停/恢复（Escape 或 P 键）
+    if((e.key==='Escape'||e.key==='p'||e.key==='P')&&(state==='playing'||state==='paused')){
+      e.preventDefault(); togglePause(); return;
+    }
+
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].indexOf(e.key)>=0) e.preventDefault();
     if(e.key===' '||e.code==='Space'){
       if(state==='idle'||state==='over') startGame();
+      else if(state==='paused') resumeGame();
       return;
     }
     if(state!=='playing') return;
@@ -387,6 +429,7 @@
 
   ov.addEventListener('click',function(){
     if(state==='idle'||state==='over') startGame();
+    else if(state==='paused') resumeGame();
   });
 
   // 返回初始界面按钮
